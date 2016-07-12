@@ -21,6 +21,7 @@
 #include <math.h>
 #include <ctype.h>
 #include <map>
+#include <array>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -33,6 +34,61 @@
 
 using namespace std;
 using namespace boost;
+
+namespace {
+//helper functions to merge DNA sequences
+int agreement(const char& qual1, const char& qual2){
+    float prob1 = std::pow(10,(float)-qual1/10);
+    float prob2 = std::pow(10,(float)-qual2/10);
+    float posterior = (prob1*prob2/3)/(1-prob1-prob2+4*prob1*prob2/3);
+    posterior = std::round(-10*log10(posterior));
+    return posterior;
+}
+
+int disagreement(const char& qual1, const char& qual2){
+    float prob1 = std::pow(10,(float)-qual1/10);
+    float prob2 = std::pow(10,(float)-qual2/10);
+    float posterior = ((prob1*(1-prob2/3))/(prob1+prob2-4*prob1*prob2/3));
+    posterior = std::round(-10*log10(posterior));
+    return posterior;
+}
+
+float phredProb(const char& qual){
+    return std::pow(10, (double)(-qual)/10.0);
+}
+//error probabilites are precomputed for all phred scores
+std::array<float, 127> compute_error_probs(){
+    std::array<float, 127> result;
+    for (int i = 33; i < result.size(); i++){
+        result[i] = phredProb(i-33);
+    }
+    return result;
+}
+//new values for updated error probabilites are precomputed
+std::array<std::array<int, 127>, 127> compute_error_agreement(){
+    std::array<std::array<int, 127>, 127> result;
+    for (int i = 33; i < result.size(); i++){
+        for(int j = 33; j < result.size(); j++){
+            result[i][j] = agreement(i-33,j-33);
+        }
+    }
+    return result;
+}
+
+std::array<std::array<int, 127>, 127> compute_error_disagreement(){
+    std::array<std::array<int, 127>, 127> result;
+    for (int i = 33; i < result.size(); i++){
+        for(int j = 33; j < result.size(); j++){
+            result[i][j] = disagreement(i-33,j-33);
+        }
+    }
+    return result;
+}
+
+std::array<float, 127> error_probs = compute_error_probs();
+std::array<std::array<int, 127>, 127> error_agreement = compute_error_agreement();
+std::array<std::array<int, 127>, 127> error_disagreement = compute_error_disagreement();
+}
 
 int phred_sum(const string& phred, char phred_base=33) {
 	int result = 0;
@@ -66,27 +122,6 @@ std::vector<BamTools::CigarOp> createCigar(std::string& nucigar){
         }
     }
     return res;
-}
-
-//helper functions to merge DNA sequences; +33 is substracted beforehand
-int agreement(const char& qual1, const char& qual2){
-    float prob1 = std::pow(10,(float)-qual1/10);
-    float prob2 = std::pow(10,(float)-qual2/10);
-    float posterior = (prob1*prob2/3)/(1-prob1-prob2+4*prob1*prob2/3);
-    posterior = std::round(-10*log10(posterior));
-    return posterior;
-}
-
-int disagreement(const char& qual1, const char& qual2){
-    float prob1 = std::pow(10,(float)-qual1/10);
-    float prob2 = std::pow(10,(float)-qual2/10);
-    float posterior = ((prob1*(1-prob2/3))/(prob1+prob2-4*prob1*prob2/3));
-    posterior = std::round(-10*log10(posterior));
-    return posterior;
-}
-
-double phredProb(const char& qual){
-    return std::pow(10, (double)(-qual+33)/10.0);
 }
 
 int computeOffset(const std::vector<char>& cigar){
@@ -137,14 +172,14 @@ std::pair<char,char> computeEntry(const char& base1, const char& qual1, const ch
 
     if (base1==base2){
         result.first = base1;
-        result.second = std::min(agreement(qual1-33,qual2-33)+33,126);
+        result.second = std::min(error_agreement[qual1][qual2]+33,126);
     }
     else if (qual1>=qual2) {
         result.first = base1;
-        result.second = disagreement(qual1-33,qual2-33)+33;
+        result.second = error_disagreement[qual1][qual2]+33;
     } else {
         result.first = base2;
-        result.second = disagreement(qual2-33,qual1-33)+33;
+        result.second = error_disagreement[qual2][qual1]+33;
     }
     return result;
 }
@@ -348,7 +383,7 @@ std::vector<AlignmentRecord::mapValue> AlignmentRecord::coveredPositions() const
             case 'M': {
                 c = this->sequence1[q];
                 char qual = this->sequence1.qualityChar(q);
-                cov_positions.push_back({r,c,qual,phredProb(qual),q,0});
+                cov_positions.push_back({r,c,qual,error_probs[qual],q,0});
                 //char d = this->sequence1[q];
                 ++q;
                 ++r;
@@ -384,7 +419,7 @@ std::vector<AlignmentRecord::mapValue> AlignmentRecord::coveredPositions() const
                     case 'M': {
                         c = this->sequence2[q];
                         char qual = this->sequence2.qualityChar(q);
-                        cov_positions.push_back({r,c,qual,phredProb(qual),q,1});
+                        cov_positions.push_back({r,c,qual,error_probs[qual],q,1});
                         ++q;
                         ++r;
                         break;
@@ -1878,6 +1913,7 @@ void printReads(std::ostream& outfile, std::deque<AlignmentRecord*>& reads, int 
 
     if (doc_haplotypes == 0){
         for (auto&& r : reads) {
+            unsigned int abs_number_reads = r->getReadNames().size();
             outfile << ">" <<r->name;
             if (not r->single_end) outfile << "|paired";
             outfile << "|ht_freq:" << r->probability;
@@ -1887,6 +1923,7 @@ void printReads(std::ostream& outfile, std::deque<AlignmentRecord*>& reads, int 
                 outfile << "|start2:" << r->getStart2();
                 outfile << "|end2:" << r->getEnd2();
             }
+            outfile << "|#reads:" << abs_number_reads;
             outfile << endl;
 
             outfile << r->sequence1;
@@ -2006,3 +2043,179 @@ void printReads(std::ostream& outfile, std::deque<AlignmentRecord*>& reads, int 
         }
     }
 }
+
+void printGFF(std::ostream& output, std::deque<AlignmentRecord*>& reads){
+    assert(false);
+}
+
+void printBAM(std::ostream& output, std::string filename, std::deque<AlignmentRecord*>& reads ,BamTools::SamHeader& header, BamTools::RefVector& references){
+    BamTools::BamAlignment al;
+    //Debugging: read in bam file of singletons to member variables:
+    /*
+    BamTools::BamReader bamreader;
+    if (not bamreader.Open("/MMCI/TM/structvar/work/hivhaplo/output/KMT/singletons.bam")) {
+        cerr << bamreader.GetFilename() << endl;
+        throw std::runtime_error("Couldn't open Bamfile");
+    }
+    int counter = 0;
+    while (bamreader.GetNextAlignment(al)){
+        cout << al.IsDuplicate() << endl;
+        cout << al.IsFailedQC() << endl;
+        cout << al.IsFirstMate() << endl;
+        cout << al.IsMapped() << endl;
+        cout << al.IsMateMapped() << endl;
+        cout << al.IsMateReverseStrand() << endl;
+        cout << al.IsPaired() << endl;
+        cout << al.IsPrimaryAlignment() << endl;
+        cout << al.IsProperPair() << endl;
+        cout << al.IsReverseStrand() << endl;
+        cout << al.IsSecondMate() << endl;
+        cout << al.Length << endl;
+        cout << al.QueryBases << endl;
+        cout << al.AlignedBases << endl;
+        cout << al.Qualities << endl;
+        cout << al.TagData << endl;
+        cout << al.RefID << endl;
+        cout << al.Position << endl;
+        cout << al.Bin << endl;
+        cout << al.MapQuality << endl;
+        cout << al.AlignmentFlag << endl;
+        cout << al.MateRefID << endl;
+        cout << al.MatePosition << endl;
+        cout << al.InsertSize << endl;
+        cout << al.Filename << endl;
+        counter++;
+        if (counter == 3){
+            break;
+        }
+    }
+    */
+    BamTools::BamWriter writer;
+    //get Header and get References
+    if ( !writer.Open(filename, header, references) ) {
+        cerr << "Could not open output BAM file" << endl;
+        throw std::runtime_error("Couldn't open output Bamfile");
+    return;
+    }
+    /* for a better overview this comment contains information about the members of a BamTools::BamAlignment
+        std::string Name;               // read name
+        int32_t     Length;             // length of query sequence
+        std::string QueryBases;         // 'original' sequence (contained in BAM file)
+        std::string AlignedBases;       // 'aligned' sequence (QueryBases plus deletion, padding, clipping chars)
+        std::string Qualities;          // FASTQ qualities (ASCII characters, not numeric values)
+        std::string TagData;            // tag data (use provided methods to query/modify)
+        int32_t     RefID;              // ID number for reference sequence
+        int32_t     Position;           // position (0-based) where alignment starts
+        uint16_t    Bin;                // BAM (standard) index bin number for this alignment
+        uint16_t    MapQuality;         // mapping quality score
+        uint32_t    AlignmentFlag;      // alignment bit-flag (use provided methods to query/modify)
+        std::vector<CigarOp> CigarData; // CIGAR operations for this alignment
+        int32_t     MateRefID;          // ID number for reference sequence where alignment's mate was aligned
+        int32_t     MatePosition;       // position (0-based) where alignment's mate starts
+        int32_t     InsertSize;         // mate-pair insert size
+        std::string Filename;           // name of BAM file which this alignment comes from
+
+    BamAlignment::BamAlignment(void)
+    : Length(0)
+    , RefID(-1)
+    , Position(-1)
+    , Bin(0)
+    , MapQuality(0)
+    , AlignmentFlag(0)
+    , MateRefID(-1)
+    , MatePosition(-1)
+    , InsertSize(0)
+    */
+    // iterate through all alignments and write them to output
+    for (auto&& r : reads){
+        //set members of al
+        if(r->single_end){
+            al.Name = r->getName();
+            al.Length = r->getSequence1().size();
+            al.QueryBases = r->getSequence1().toString();
+            //no aligned bases
+            al.Qualities = r->getSequence1().qualityString();
+            //no tag data
+            al.RefID = 0;
+            al.Position = r->getStart1()-1;
+            //no bin, map quality. alignment flag is set extra
+            al.MateRefID = 0;
+            al.MatePosition = r->getStart1()-1;
+            al.InsertSize = 0;
+            al.CigarData = r->getCigar1();
+            al.Filename = filename;
+            //set flags
+            al.SetIsDuplicate(false);
+            al.SetIsFailedQC(false);
+            al.SetIsFirstMate(true);
+            al.SetIsMapped(true);
+            al.SetIsMateMapped(false);
+            al.SetIsMateReverseStrand(false);
+            al.SetIsPaired(true);
+            al.SetIsPrimaryAlignment(true);
+            al.SetIsProperPair(false);
+            al.SetIsReverseStrand(false);
+            al.SetIsSecondMate(false);
+            writer.SaveAlignment(al);
+        } else {
+            al.Name = r->getName();
+            al.Length = r->getSequence1().size();
+            al.QueryBases = r->getSequence1().toString();
+            //no aligned bases
+            al.Qualities = r->getSequence1().qualityString();
+            //no tag data
+            //given the case that reads were mapped against more than one reference, al.RefID has to be modified
+            al.RefID = 0;
+            al.Position = r->getStart1()-1;
+            //no bin, map quality. alignment flag is set extra
+            al.MateRefID = 0;
+            al.CigarData = r->getCigar1();
+            al.MatePosition = r->getStart2()-1;
+            al.InsertSize =r->getEnd2()-r->getStart1()+1;
+            al.Filename = filename;
+            //set flags
+            al.SetIsDuplicate(false);
+            al.SetIsFailedQC(false);
+            al.SetIsFirstMate(true);
+            al.SetIsMapped(true);
+            al.SetIsMateMapped(true);
+            al.SetIsMateReverseStrand(false);
+            al.SetIsPaired(true);
+            al.SetIsPrimaryAlignment(true);
+            al.SetIsProperPair(true);
+            al.SetIsReverseStrand(false);
+            al.SetIsSecondMate(false);
+            writer.SaveAlignment(al);
+            al.Name = r->getName();
+            al.Length = r->getSequence2().size();
+            al.QueryBases = r->getSequence2().toString();
+            //no aligned bases
+            al.Qualities = r->getSequence2().qualityString();
+            //no tag data
+            //given the case that reads were mapped against more than one reference, al.RefID has to be modified
+            al.RefID = 0;
+            al.Position = r->getStart2()-1;
+            //no bin, map quality. alignment flag is set extra.
+            al.CigarData = r->getCigar2();
+            al.MatePosition = r->getStart1()-1;
+            al.InsertSize =(-1)*(r->getEnd2()-r->getStart1()+1);
+            al.Filename = filename;
+            //set flags
+            al.SetIsDuplicate(false);
+            al.SetIsFailedQC(false);
+            al.SetIsFirstMate(false);
+            al.SetIsMapped(true);
+            al.SetIsMateMapped(true);
+            al.SetIsMateReverseStrand(false);
+            al.SetIsPaired(true);
+            al.SetIsPrimaryAlignment(true);
+            al.SetIsProperPair(true);
+            al.SetIsReverseStrand(false);
+            al.SetIsSecondMate(true);
+            writer.SaveAlignment(al);
+        }
+        //write to output
+    }
+    writer.Close();
+}
+

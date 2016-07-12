@@ -40,6 +40,7 @@
 #include "AlignmentRecord.h"
 #include "QuasispeciesEdgeCalculator.h"
 #include "NewEdgeCalculator.h"
+//#include "NoMeEdgeCalculator.h"
 #include "CliqueFinder.h"
 #include "CLEVER.h"
 #include "BronKerbosch.h"
@@ -94,12 +95,14 @@ Options:
   -s NUM --significance=NUM               Filter out reads witch are below
                                               <num> standard deviations.
                                               [default: 3.0]
-  -L FILE, --log=FILE                      Write log to <file>.
-  -d NUM --doc_haplotypes=NUM              Use for Simulation Study with known
+  -L FILE --log=FILE                       Write log to <file>.
+  -d NUM --doc_haplotypes=NUM              Used in simulation studies with known
                                            haplotypes to document which reads
                                            contributed to which final cliques (3 or 5).
   -p0 --noProb0                            ignore the tail probabilites during edge
-                                           calculation.
+                                           calculation in <output>.
+  -gff --gff                               Option to create GFF File from output. <output> is used as prefix.
+  -bam --bam                               Option to create BAM File from output. <output> is used as prefix.
 )";
 
 void usage() {
@@ -129,7 +132,7 @@ bool read_mean_and_sd(const string& filename, double* mean, double* sd) {
     return true;
 }
 
-deque<AlignmentRecord*>* readBamFile(string filename, vector<string>& readNames, unsigned int& maxPosition) {
+deque<AlignmentRecord*>* readBamFile(string filename, vector<string>& readNames, unsigned int& maxPosition, BamTools::SamHeader& header, BamTools::RefVector& references) {
     typedef std::unordered_map<std::string, AlignmentRecord*> name_map_t;
     name_map_t names_to_reads;
     deque<AlignmentRecord*>* reads = new deque<AlignmentRecord*>;
@@ -139,6 +142,9 @@ deque<AlignmentRecord*>* readBamFile(string filename, vector<string>& readNames,
         throw std::runtime_error("Couldn't open Bamfile");
     }
     BamTools::BamAlignment alignment;
+    // retrieve 'metadata' from input BAM files, these are required by BamWriter
+    header = bamreader.GetHeader();
+    references = bamreader.GetReferenceData();
 
     //int readcounter = 0;
     //int singleendcounter = 0;
@@ -269,6 +275,11 @@ int main(int argc, char* argv[]) {
     int doc_haplotypes = 0;
     if (args["--doc_haplotypes"]) doc_haplotypes = stoi(args["--doc_haplotypes"].asString());
     bool noProb0 = args["--noProb0"].asBool();
+    //-ot CHAR --output_type=CHAR
+    bool bam = args["--bam"].asBool();
+    bool gff = args["--gff"].asBool();
+
+
     // END PARAMETERS
 
     bool call_indels = indel_output_file.size() > 0;
@@ -307,12 +318,15 @@ int main(int argc, char* argv[]) {
     clock_t clock_start = clock();
     vector<string> originalReadNames;
     unsigned int maxPosition1;
-    deque<AlignmentRecord*>* reads = readBamFile(bamfile, originalReadNames,maxPosition1);
+    BamTools::SamHeader header;
+    BamTools::RefVector references;
+    deque<AlignmentRecord*>* reads = readBamFile(bamfile, originalReadNames,maxPosition1,header,references);
     EdgeCalculator* edge_calculator = nullptr;
     EdgeCalculator* indel_edge_calculator = nullptr;
     unique_ptr<vector<mean_and_stddev_t> > readgroup_params(nullptr);
     maxPosition1 = (maxPosition1>maxPosition2) ? maxPosition1 : maxPosition2;
     edge_calculator = new NewEdgeCalculator(Q, edge_quasi_cutoff_cliques, overlap_cliques, frameshift_merge, simpson_map, edge_quasi_cutoff_single, overlap_single, edge_quasi_cutoff_mixed, maxPosition1, noProb0);
+    //edge_calculator = new NoMeEdgeCalculator("HELLO");
     if (call_indels) {
         double insert_mean = -1.0;
         double insert_stddev = -1.0;
@@ -328,7 +342,9 @@ int main(int argc, char* argv[]) {
         indel_os = new ofstream(indel_output_file.c_str());
     }
     LogWriter* lw = nullptr;
-    if (logfile != "") lw = new LogWriter(logfile);
+    unsigned int number_of_reads = originalReadNames.size();
+    std::vector<unsigned int> read_clique_counter (number_of_reads);
+    if (logfile != "") lw = new LogWriter(logfile,read_clique_counter);
 
     CliqueCollector collector(lw);
     CliqueFinder* clique_finder;
@@ -341,8 +357,9 @@ int main(int argc, char* argv[]) {
     if (indel_edge_calculator != 0) {
         clique_finder->setSecondEdgeCalculator(indel_edge_calculator);
     }
-
     ofstream* reads_ofstream = 0;
+
+
 
 
 
@@ -358,7 +375,7 @@ int main(int argc, char* argv[]) {
         return (ct == 1 and filter_singletons and read->getReadCount() <= 1) or (ct > 1 and significance != 0.0 and read->getProbability() < 1.0 / size - significance*stdev);
     };
     int edgecounter = 0;
-    cout << "start: " << originalReadNames.size();
+    cout << "start: " << number_of_reads;
     while (ct != iterations) {
         clique_finder->initialize();
         //cout << "Clique_finder initialized " << ct << endl;
@@ -411,9 +428,17 @@ int main(int argc, char* argv[]) {
         }
         reads->erase(new_end_it, reads->end());
     }
-    ofstream os(outfile, std::ofstream::out);
+    ofstream os(outfile + ".fasta", std::ofstream::out);
     setProbabilities(*reads);
     printReads(os, *reads, doc_haplotypes);
+    if (gff){
+        ofstream os1(outfile + ".gff",std::ofstream::out);
+        printGFF(os1,*reads);
+    }
+    if (bam){
+        ofstream os2(outfile + ".bam",std::ofstream::out);
+        printBAM(os2,outfile + ".bam",*reads,header,references);
+    }
 
     cout << "final: " << reads->size() << endl;
 
