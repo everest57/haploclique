@@ -8,10 +8,10 @@ dependencies:
   pre: 
     - wget --no-check-certificate https://github.com/cbg-ethz/ConsensusFixer/releases/download/0.3.1/ConsensusFixer.jar
     - wget --no-check-certificate https://github.com/cbg-ethz/InDelFixer/releases/download/v1.1/InDelFixer.jar
-    - echo ‘export SAF=$HOME/$CIRCLE_PROJECT_REPONAME/’ >> ~/.bash_profile
-    - apt-get install libncurses5-dev cmake libboost-all-dev git build-essential zlib1g-dev parallel
+    - sudo cho ‘export SAF=$HOME/$CIRCLE_PROJECT_REPONAME/’ >> ~/.profile
+    - sudo apt-get install libncurses5-dev cmake libboost-all-dev git build-essential zlib1g-dev parallel
   override:
-    - mkdir build; cd build; cmake ..; make; make install
+    - mkdir build; cd build; cmake ..; make; sudo make install
 
 general:
   branches:
