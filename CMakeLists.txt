@@ -17,7 +17,7 @@
 
 cmake_minimum_required (VERSION 2.6) 
 project (STRUCTVAR)
-SET(CMAKE_C_COMPILER "/usr/bin/gcc-5.4.0")
+SET(CMAKE_C_COMPILER "/usr/bin/gcc-4.9”)
 
 list(APPEND CMAKE_MODULE_PATH .) 
 
