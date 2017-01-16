@@ -1,3 +1,7 @@
+machine:
+  environment:
+    SAF=$HOME/$CIRCLE_PROJECT_REPONAME/
+
 checkout:
   override:
     - git clone https://github.com/MaryamZaheri/haploclique.git
@@ -8,7 +12,6 @@ dependencies:
   pre: 
     - wget --no-check-certificate https://github.com/cbg-ethz/ConsensusFixer/releases/download/0.3.1/ConsensusFixer.jar
     - wget --no-check-certificate https://github.com/cbg-ethz/InDelFixer/releases/download/v1.1/InDelFixer.jar
-    - sudo echo ‘export SAF=$HOME/$CIRCLE_PROJECT_REPONAME/’ >> ~/.profile
     - sudo apt-get install libncurses5-dev cmake libboost-all-dev git build-essential zlib1g-dev parallel
   override:
     - mkdir build; cd build; cmake ..; make; sudo make install
