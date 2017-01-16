@@ -1,6 +1,6 @@
 checkout:
   override:
-    - git clone https://github.com/cbg-ethz/haploclique
+    - git clone https://github.com/MaryamZaheri/haploclique.git
     - cd haploclique
     - git submodule init && git submodule update
 
