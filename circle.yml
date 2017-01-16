@@ -17,4 +17,4 @@ general:
   branches:
     ignore:
       - master   
-      - one click
+      - oneclick
