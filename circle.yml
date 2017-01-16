@@ -1,6 +1,6 @@
 machine:
   environment:
-    SAF=$HOME/$CIRCLE_PROJECT_REPONAME/
+    SAF: “${HOME}/${CIRCLE_PROJECT_REPONAME}/“
 checkout:
   override:
     - git clone https://github.com/MaryamZaheri/haploclique.git
