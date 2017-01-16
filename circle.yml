@@ -14,7 +14,7 @@ dependencies:
     - wget --no-check-certificate https://github.com/cbg-ethz/InDelFixer/releases/download/v1.1/InDelFixer.jar
     - sudo apt-get install libncurses5-dev cmake libboost-all-dev git build-essential zlib1g-dev parallel
   override:
-    - mkdir build; cd build; cmake ..; make; sudo make install
+    - mkdir build; cd build; sudo cmake ..; sudo make; sudo make install
 
 general:
   branches:
