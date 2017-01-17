@@ -25,6 +25,10 @@ dependencies:
   override:
     - mkdir build; cd build; sudo cmake ..; sudo make; sudo make install
 
+test:
+  override:
+    - cram tests/cram
+
 general:
   branches:
     ignore:
