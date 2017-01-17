@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with HaploClique.  If not, see <http://www.gnu.org/licenses/>.
+# along with HaploClique. If not, see <http://www.gnu.org/licenses/>
 
 cmake_minimum_required (VERSION 2.6) 
 project (STRUCTVAR)
