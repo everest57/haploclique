@@ -1,5 +1,5 @@
 Sanity test:
-  $ haploclique_output_path=tests/data/simulation
+  $ haploclique_output_path=${HOME}/${CIRCLE_PROJECT_REPONAME}/tests/data/simulation
   $ pwd
   $ cd $haploclique_output_path
   $ haploclique_exe_path=../../../build/src
