@@ -4,6 +4,7 @@ Sanity test:
   $ haploclique_exe_path=../../../build/src
   $ /home/ubuntu/haploclique/build/src/haploclique reads_HIV_1_300_01.bam > /dev/null;
   $ diff quasispecies.fasta.fasta quasispecies_HIV_1_300_01_defaultParam.fasta.fasta > out.txt;
+  $ head -1 out.txt
   $ rm quasispecies.fasta.fasta;
   $ if [ -s out.txt ]; then echo "Different"; else echo "Same"; fi;
   Same
