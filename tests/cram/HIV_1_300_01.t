@@ -10,6 +10,7 @@ Sanity test:
   $ du -h quasispecies_HIV_1_300_01_defaultParam.fasta.fasta
   $ head -50 quasispecies.fasta.fasta
   $ head -50 quasispecies_HIV_1_300_01_defaultParam.fasta.fasta
+  $ head -50 out.txt
   $ rm quasispecies.fasta.fasta;
   $ if [ -s out.txt ]; then echo "Different"; else echo "Same"; fi;
   Same
