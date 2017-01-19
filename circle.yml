@@ -28,6 +28,8 @@ dependencies:
 test:
   override:
     - cram tests/cram
+  post:
+    - cp quasispecies.fasta.fasta $CIRCLE_ARTIFACTS
 
 general:
   branches:
