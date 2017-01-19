@@ -8,7 +8,7 @@ Sanity test:
   $ diff quasispecies_sorted.fasta.fasta quasispecies_HIV_1_150_01_defaultParam_sorted.fasta.fasta > out.txt;
   $ head -100 quasispecies_HIV_1_150_01_defaultParam_sorted.fasta.fasta
   $ head -100 quasispecies_sorted.fasta.fasta
-  $ head -20 out.txt
+  $ cat out.txt
   $ rm quasispecies_sorted.fasta.fasta quasispecies.fasta.fasta quasispecies_HIV_1_150_01_defaultParam_sorted.fasta.fasta
   $ if [ -s out.txt ]; then echo "Different"; else echo "Same"; fi;
   Same
