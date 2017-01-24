@@ -4,6 +4,6 @@
   $ cd $haploclique_output_path 
   $ haploclique_exe_path=../../../build/src
   $ /home/ubuntu/haploclique/build/src/haploclique -q 0.85 reads_HIV-1_50_01.bam > /dev/null;
-  $ diff quasispecies.fasta.fasta quasispecies_HIV-1_50_circleci.fasta.fasta > out.txt;
+  $ diff quasispecies.fasta.fasta quasispecies_HIV-1_50_circleci_weakParam.fasta.fasta > out.txt;
   $ if [ -s out.txt ]; then echo "Different"; else echo "Same"; fi;
   Same
