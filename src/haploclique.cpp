@@ -326,14 +326,12 @@ int main(int argc, char* argv[]) {
     BamTools::SamHeader header;
     BamTools::RefVector references;
     deque<AlignmentRecord*>* reads = readBamFile(bamfile, originalReadNames,maxPosition1,header,references);
-    cout << "readBamFile finished." << endl; //Maryam
     EdgeCalculator* edge_calculator = nullptr;
     EdgeCalculator* indel_edge_calculator = nullptr;
     unique_ptr<vector<mean_and_stddev_t> > readgroup_params(nullptr);
     maxPosition1 = (maxPosition1>maxPosition2) ? maxPosition1 : maxPosition2;
     edge_calculator = new NewEdgeCalculator(Q, edge_quasi_cutoff_cliques, overlap_cliques, frameshift_merge, simpson_map, edge_quasi_cutoff_single, overlap_single, edge_quasi_cutoff_mixed, maxPosition1, noProb0);
     //edge_calculator = new NoMeEdgeCalculator("HELLO");
-    cout << "edge_calculator initialized." << endl; //Maryam
     if (call_indels) {
         double insert_mean = -1.0;
         double insert_stddev = -1.0;
@@ -355,7 +353,6 @@ int main(int argc, char* argv[]) {
 
     CliqueCollector collector(lw);
     CliqueFinder* clique_finder;
-    cout << "CliqueFinder declared." << endl; //Maryam
 
     if (args["bronkerbosch"].asBool()) {
         clique_finder = new BronKerbosch(*edge_calculator, collector, lw);
@@ -373,7 +370,6 @@ int main(int argc, char* argv[]) {
 
 
     // Main loop
-    cout << "Main loop started." << endl; //Maryam
     int ct = 0;
     double stdev = 1.0;
     auto filter_fn = [&](unique_ptr<AlignmentRecord>& read, int size) {
@@ -411,8 +407,7 @@ int main(int argc, char* argv[]) {
             clique_finder->addAlignment(al_ptr,edgecounter);
             //cout << "addAlignment " << ct << endl;
         }
-        cout << "\tedges: #######################" << edgecounter << endl; //Maryam
-        //cout << "\tedges: " << edgecounter << endl; //Maryam
+        cout << "\tedges: " << edgecounter << endl;
 
         delete reads;
         //cout << "reads deleted " << ct << endl;
