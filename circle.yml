@@ -30,12 +30,13 @@ dependencies:
   override:
     # Install Haploclique
     - mkdir build; cd build; sudo cmake ..; sudo make; sudo make install
+    - pwd
 
 ## Customize test
 test:
   override:
     - cram test/cram # run cram for end to end test using test cases in test/cram directory
-    - test/unit/unit
+    - ${HOME}/${CIRCLE_PROJECT_REPONAME}/build/test/unit/unit
   post:
     # Copy the haploclique output file to the $CIRCLE_ARTIFACTS directory to be available for further usage
     - filename="quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
