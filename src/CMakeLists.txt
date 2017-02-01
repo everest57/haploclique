@@ -47,7 +47,6 @@ set(ALL_EXE_TARGETS haploclique)
 install(TARGETS ${ALL_EXE_TARGETS} RUNTIME DESTINATION bin)
 
 set(libhaplo_SRCS
-	ASTagCalculator.h
 	AlignmentRecord.h
 	AnyDistributionEdgeCalculator.h
 	BamHelper.h
@@ -83,7 +82,6 @@ set(libhaplo_SRCS
 	Types.h
 	Variation.h
 	VariationIndex.h
-	ASTagCalculator.cpp
 	AlignmentRecord.cpp
 	AnyDistributionEdgeCalculator.cpp
 	BamHelper.cpp
