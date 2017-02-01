@@ -56,5 +56,6 @@ endif()
 
 add_subdirectory(external/BamTools/src/api)
 add_subdirectory(src)
+add_subdirectory(test)
 
 #install(PROGRAMS scripts/haploclique-assembly scripts/postprocess-predictions bwa/bwa samtools/samtools DESTINATION bin)

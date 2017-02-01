@@ -35,14 +35,18 @@ dependencies:
 test:
   override:
     - cram test/cram # run cram for end to end test using test cases in test/cram directory
+    - test/unit/unit
   post:
     # Copy the haploclique output file to the $CIRCLE_ARTIFACTS directory to be available for further usage
-    - cp test/data/simulation/quasispecies.fasta.fasta $CIRCLE_ARTIFACTS
+    - filename="quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
+    - echo $filename
+    - mv quasispecies.fasta.fasta $filename
+    - cp test/data/simulation/$filename $CIRCLE_ARTIFACTS
 
 ## Customize general config
 general:
   branches:
     ignore:
-      - master   
+      - master
       - oneclick
 
