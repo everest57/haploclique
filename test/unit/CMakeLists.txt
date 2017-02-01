@@ -1,8 +1,6 @@
 add_executable(unit 
 	main.cpp
 	unit1.cpp
-	unit2.cpp
-	unit3.cpp
 )
 
 IF(${STATIC_LINKING} MATCHES "1")
