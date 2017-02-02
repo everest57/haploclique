@@ -9,7 +9,8 @@ machine:
   environment:
     # Add environment variable SAF as the parent directory of ConsensusFixer and InDelFixer. 
     SAF: “${HOME}/${CIRCLE_PROJECT_REPONAME}/“
-    filename: ”quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
+    filename: ‘quasispecies’$(date +’%Y-%m-%d_%H-%M-%S’)’.fasta.fasta’
+    filename2: “quasispecies”$(date +”%Y-%m-%d_%H-%M-%S”)”.fasta.fasta”
 
 ## Customize checkout
 checkout:
@@ -41,10 +42,13 @@ test:
   post:
     # Copy the haploclique output file to the $CIRCLE_ARTIFACTS directory to be available for further usage
     - echo $(date +"%Y-%m-%d_%H-%M-%S")
-    - cp test/data/simulation/quasispecies.fasta.fasta ${CIRCLE_ARTIFACTS}/“quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
+    - cp test/data/simulation/quasispecies.fasta.fasta $CIRCLE_ARTIFACTS/‘quasispecies’$(date +’%Y-%m-%d_%H-%M-%S’)’.fasta.fasta’
     - echo ${filename}
+    - echo $filename
+    - echo ${filename2}
+    - echo $filename2
     - cp test/data/simulation/quasispecies.fasta.fasta ${filename}
-    - cp test/data/simulation/${filename} $CIRCLE_ARTIFACTS
+    - cp ${filename} $CIRCLE_ARTIFACTS
 
 ## Customize general config
 general:
