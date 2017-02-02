@@ -30,7 +30,6 @@ dependencies:
   override:
     # Install Haploclique
     - mkdir build; cd build; sudo cmake ..; sudo make; sudo make install
-    - pwd
 
 ## Customize test
 test:
@@ -39,9 +38,6 @@ test:
     - ${HOME}/${CIRCLE_PROJECT_REPONAME}/build/test/unit/unit
   post:
     # Copy the haploclique output file to the $CIRCLE_ARTIFACTS directory to be available for further usage
-    - echo $(date +"%Y-%m-%d_%H-%M-%S")
-    - echo 'quasispecies'$(date +'%Y-%m-%d_%H-%M-%S')'.fasta.fasta'
-    - echo "quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
     - cp test/data/simulation/quasispecies.fasta.fasta $CIRCLE_ARTIFACTS/'quasispecies'$(date +'%Y-%m-%d_%H-%M-%S')'.fasta.fasta'
 
 ## Customize general config
