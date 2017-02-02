@@ -40,10 +40,10 @@ test:
   post:
     # Copy the haploclique output file to the $CIRCLE_ARTIFACTS directory to be available for further usage
     - echo $(date +"%Y-%m-%d_%H-%M-%S")
-    - cp quasispecies.fasta.fasta "quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
+    - cp test/data/simulation/quasispecies.fasta.fasta "quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
     - filename="quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
     - echo ${filename}
-    - cp quasispecies.fasta.fasta ${filename}
+    - cp test/data/simulation/quasispecies.fasta.fasta ${filename}
     - cp test/data/simulation/${filename} $CIRCLE_ARTIFACTS
 
 ## Customize general config
