@@ -7,7 +7,7 @@ machine:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 50 --slave /usr/bin/g++ g++ /usr/bin/g++-4.9
 
   environment:
-    # Add environment variable SAF as the parent direcoty of ConsensusFixer and InDelFixer. 
+    # Add environment variable SAF as the parent directory of ConsensusFixer and InDelFixer. 
     SAF: “${HOME}/${CIRCLE_PROJECT_REPONAME}/“
 
 ## Customize checkout
@@ -39,10 +39,12 @@ test:
     - ${HOME}/${CIRCLE_PROJECT_REPONAME}/build/test/unit/unit
   post:
     # Copy the haploclique output file to the $CIRCLE_ARTIFACTS directory to be available for further usage
+    - echo $(date +"%Y-%m-%d_%H-%M-%S")
+    - cp quasispecies.fasta.fasta "quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
     - filename="quasispecies"$(date +"%Y-%m-%d_%H-%M-%S")".fasta.fasta"
-    - echo $filename
-    - mv quasispecies.fasta.fasta $filename
-    - cp test/data/simulation/$filename $CIRCLE_ARTIFACTS
+    - echo ${filename}
+    - cp quasispecies.fasta.fasta ${filename}
+    - cp test/data/simulation/${filename} $CIRCLE_ARTIFACTS
 
 ## Customize general config
 general:
