@@ -1,26 +1,27 @@
 ## Customize the test machine
 machine:
   pre:
-    # Install g++ 4.9 version on the machine to use 
+    # Install g++ 4.9 version on the machine to use
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt-get install gcc-4.9 g++-4.9
   post:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 50 --slave /usr/bin/g++ g++ /usr/bin/g++-4.9
 
   environment:
-    # Add environment variable SAF as the parent directory of ConsensusFixer and InDelFixer. 
+    # Add environment variable SAF as the parent directory of ConsensusFixer and InDelFixer.
+
     SAF: "${HOME}/${CIRCLE_PROJECT_REPONAME}/"
 
 ## Customize checkout
 checkout:
   override:
-    - git clone https://github.com/MaryamZaheri/haploclique.git
+    - git clone https://github.com/cbg-ethz/haploclique.git
     - cd haploclique
-    - git submodule init && git submodule update
+    - git submodule init && git submodule update --init
 
 ## Customize dependencies
 dependencies:
-  pre: 
-    # Download ConsensusFixer and InDelFixer 
+  pre:
+    # Download ConsensusFixer and InDelFixer
     - wget --no-check-certificate https://github.com/cbg-ethz/ConsensusFixer/releases/download/0.3.1/ConsensusFixer.jar
     - wget --no-check-certificate https://github.com/cbg-ethz/InDelFixer/releases/download/v1.1/InDelFixer.jar
     # Install cmake, boost, parallel and cram
@@ -29,7 +30,7 @@ dependencies:
 
   override:
     # Install Haploclique
-    - mkdir build; cd build; sudo cmake ..; sudo make; sudo make install
+    - mkdir build; cd build; cmake ..; make; sudo make install
 
 ## Customize test
 test:
@@ -46,4 +47,3 @@ general:
     ignore:
       - master
       - oneclick
-
