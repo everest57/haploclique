@@ -140,9 +140,11 @@ deque<AlignmentRecord*>* readBamFile(string filename, vector<string>& readNames,
     name_map_t names_to_reads;
     deque<AlignmentRecord*>* reads = new deque<AlignmentRecord*>;
     BamTools::BamReader bamreader;
+
     if (not bamreader.Open(filename)) {
         throw std::runtime_error("Couldn't open Bamfile.");
     }
+    
     BamTools::BamAlignment alignment;
     
     // retrieve 'metadata' from input BAM files, these are required by BamWriter
@@ -171,9 +173,10 @@ deque<AlignmentRecord*>* readBamFile(string filename, vector<string>& readNames,
         reads->push_back(i.second);
     }
     
+    // if no reads could be retrieved from the BamFile
     if (reads->empty()){
         cerr << bamreader.GetFilename() << endl;
-        throw std::runtime_error("Couldn't read Bamfile.");
+        throw std::runtime_error("No reads could be retrieved from the BamFile. ");
     }
 
     bamreader.Close();
@@ -279,7 +282,20 @@ int main(int argc, char* argv[]) {
     unsigned int maxPosition1;
     BamTools::SamHeader header;
     BamTools::RefVector references;
-    deque<AlignmentRecord*>* reads = readBamFile(bamfile, originalReadNames,maxPosition1,header,references);
+
+    deque<AlignmentRecord*>* reads;
+    try{
+        reads = readBamFile(bamfile, originalReadNames,maxPosition1,header,references);
+    }
+    catch(const runtime_error& error){
+        cerr << error.what() << endl;
+        return 1;
+    }
+    catch(...){
+        cerr << "Unexpected error while reading BamFile." << endl;
+        return 1;
+    }
+    
     EdgeCalculator* edge_calculator = nullptr;
     EdgeCalculator* indel_edge_calculator = nullptr;
     unique_ptr<vector<mean_and_stddev_t> > readgroup_params(nullptr);
