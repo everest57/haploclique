@@ -24,5 +24,6 @@ test:
   override:
     - cd build; make check
   post:
-    - cp test/data/simulation/quasispecies.fasta.fasta $CIRCLE_ARTIFACTS/'quasispecies'$(date +'%Y-%m-%d_%H-%M-%S')'.fasta.fasta'
+    - pwd
+    - cp ../test/data/simulation/quasispecies.fasta.fasta $CIRCLE_ARTIFACTS/'quasispecies'$(date +'%Y-%m-%d_%H-%M-%S')'.fasta.fasta'
 
