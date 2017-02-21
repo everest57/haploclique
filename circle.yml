@@ -25,5 +25,5 @@ test:
     - cd build; make check
   post:
     - pwd
-    - cp ../test/data/simulation/quasispecies.fasta.fasta $CIRCLE_ARTIFACTS/'quasispecies'$(date +'%Y-%m-%d_%H-%M-%S')'.fasta.fasta'
+    - cp quasispecies.fasta.fasta $CIRCLE_ARTIFACTS/'quasispecies'$(date +'%Y-%m-%d_%H-%M-%S')'.fasta.fasta'
 
